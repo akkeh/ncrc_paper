@@ -1,0 +1,19 @@
+[ ncrc ]
+Neuronal culture reservoir computing simulator
+==========================
+A respository showing python code to replicate the reservoir computing simulations of [1].
+
+by: Akke Mats Houben (akkemats.houben@ub.edu -- akke@akkehouben.net)
+
+==========================
+To get started, look at the examples directory.
+
+==========================
+Requirements:
+    - numpy
+    - nc_sim (git@github.com:akkeh/nc_sim.git)
+    - scipy
+
+==========================
+When using this code, please cite:
+    A.M. Houben, A.-C. Haeb, J. Garcia-Ojalvo \& J. Soriano, Reservoir computing in simulated neuronal cultures: Effect of network structure, (in press)
