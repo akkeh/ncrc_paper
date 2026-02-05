@@ -31,6 +31,7 @@ P_rewire = 0.2
 
 # readout
 readout_Dt  = 1e-3
+readout_win = 1
 N_cross     = 1
 
 # culture parameters:
@@ -152,7 +153,7 @@ Y = np.array(spikes_Y, dtype=int)
 for y in input_neuron_ixs:
     T = np.delete(T, Y==y)
     Y = np.delete(Y, Y==y)
-Tn = np.max(input_t)+taus[-1]+winT
+Tn = np.max(input_t)+taus[-1]+readout_win
 X = ncrc.rc.analyse.spikes_to_traces(T, Y, Tn, win_sigma=5e-3, Dt=readout_Dt)
 
 T_perm = np.array(spikes_T_perm)
@@ -160,7 +161,7 @@ Y_perm = np.array(spikes_Y_perm, dtype=int)
 for y in input_neuron_ixs:
     T_perm = np.delete(T_perm, Y_perm==y)
     Y_perm = np.delete(Y_perm, Y_perm==y)
-Tn = np.max(input_t)+taus[-1]+winT
+Tn = np.max(input_t)+taus[-1]+readout_win
 X_perm = ncrc.rc.analyse.spikes_to_traces(T_perm, Y_perm, Tn, win_sigma=5e-3, Dt=readout_Dt)
 
 scores = np.zeros((len(taus), N_cross))
@@ -169,8 +170,8 @@ for tau_ix, tau in enumerate(taus):
         input_t_train, input_y_train, _, _ = ncrc.rc.analyse.split_train_test(input_t, input_y, 1)
         _, _, input_t_test, input_y_test = ncrc.rc.analyse.split_train_test(input_t, input_y, 0)
         
-        train_reservoir_states, train_labels = ncrc.rc.analyse.collect_states(input_t_train, input_y_train, tau, X, winT=winT, Dt=readout_Dt)
-        test_reservoir_states, test_labels = ncrc.rc.analyse.collect_states(input_t_test, input_y_test, tau, X_perm, winT=winT, Dt=readout_Dt)
+        train_reservoir_states, train_labels = ncrc.rc.analyse.collect_states(input_t_train, input_y_train, tau, X, winT=readout_win, Dt=readout_Dt)
+        test_reservoir_states, test_labels = ncrc.rc.analyse.collect_states(input_t_test, input_y_test, tau, X_perm, winT=readout_win, Dt=readout_Dt)
 
         lm = ncrc.rc.analyse.fit_lm(train_reservoir_states, train_labels)
 
