@@ -7,6 +7,8 @@ import ncrc
 Dt = 1
 IS_MODULAR = True
 
+P_rewire = 0.2
+
 # culture parameters:
 width   = 1.00  # width / height
 rho     = 300   # neuron density
@@ -66,8 +68,18 @@ X, Y = nc_sim.axons.place_neurons(width, width, H, rho=rho)
 N = len(X)
 H[H==-2] = 0
 H[H==-1] = 100
-W = nc_sim.axons.grow_W(width, width, X, Y, H=H)
-W = np.multiply(W, np.random.rand(N,N) > (1-alpha))
+
+W0 = nc_sim.axons.grow_W(width, width, X, Y, H=H)
+W = np.multiply(W0, np.random.rand(N,N) > (1-alpha))
+
+W_perm = np.copy(W)
+# create rewired connectivity:
+for i in range(N):
+    for j in range(N):
+        if W_perm[i,j] != 0 and np.random.rand() > (1-P_rewire):
+            W_perm[i,j] = 0
+        if W0[i,j] !=0 and W[i,j] == 0 and np.random.rand() > (1-P_rewire):
+            W_perm[i,j] = W0[i,j]
 
 # generate inputs:
 input_neuron_ixs = ncrc.rc.generate_inputs.select_input_neurons(X, Y, 0, width/2., fraction=0.3)
@@ -81,6 +93,7 @@ Tn = np.max(It) + inter_input_interval_max*1e3
 
 # init network:
 nw = nc_sim.neurons.izhikevich.init_network(len(X), W, Tn=Tn, sigma=sigma, Dt=Dt)
+nw_perm = nc_sim.neurons.izhikevich.init_network(len(X), W_perm, Tn=Tn, sigma=sigma, Dt=Dt)
 
 # run dynamics:
 input_ix = 0
@@ -96,15 +109,57 @@ for n in np.arange(1, Nt):
         input_ix += 1
 
     nc_sim.neurons.izhikevich.simulation_step(n, nw, Iext=Iext)
+    nc_sim.neurons.izhikevich.simulation_step(n, nw_perm, Iext=Iext)
 
 spikes_T = np.array(nw['spike_T'])*1e-3
 spikes_Y = np.array(nw['spike_Y'], dtype=int)
+spikes_T_perm = np.array(nw_perm['spike_T'])*1e-3
+spikes_Y_perm = np.array(nw_perm['spike_Y'], dtype=int)
 
 # analyse responses:
+input_t = np.array(input_t)
+input_y = np.array(input_y, dtype=int)
+
+classes = np.unique(input_y)
+taus = np.arange(int(-100e-3/Dt), int(300e-3/Dt), 1)*Dt
+
+T = np.array(spikes_T)
+Y = np.array(spikes_Y, dtype=int)
+for y in input_neuron_ixs:
+    T = np.delete(T, Y==y)
+    Y = np.delete(Y, Y==y)
+Tn = np.max(input_t)+taus[-1]+winT
+X = ncrc.rc.analyse.spikes_to_traces(T, Y, win_sigma=5e-3, Dt=1e-3)
+
+T_perm = np.array(spikes_T_perm)
+Y_perm = np.array(spikes_Y_perm, dtype=int)
+for y in input_neuron_ixs:
+    T_perm = np.delete(T_perm, Y_perm==y)
+    Y_perm = np.delete(Y_perm, Y_perm==y)
+Tn = np.max(input_t)+taus[-1]+winT
+X_perm = ncrc.rc.analyse.spikes_to_traces(T_perm, Y_perm, win_sigma=5e-3, Dt=1e-3)
+
+scores = np.zeros((len(taus), N_cross))
+for tau_ix, tau in enumerate(taus):
+    for cross_ix in range(N_cross):
+        input_t_train, input_y_train, _, _ = ncrc.rc.analyse.split_train_test(input_t, unput_y, 1)
+        _, _, input_t_test, input_y_test = ncrc.rc.analyse.split_train_test(input_t, unput_y, 0)
+        
+        train_reservoir_states, train_labels = ncrc.rc.analyse.collect_states(input_t_train, input_y_train, tau, X, winT=winT, Dt=Dt)
+        test_reservoir_states, test_labels = ncrc.rc.analyse.collect_states(input_t_test, input_y_test, tau, X_perm, winT=winT, Dt=Dt)
+
+        lm = ncrc.rc.analyse.fit_lm(train_reservoir_states, train_labels)
+
+        score = lm.score(test_reservoir_states, test_labels)
+
+        scores[tau_ix, cross_ix] = score
+
+        
+
 taus, scores = ncrc.rc.analyse.score(input_t, input_y, spikes_T, spikes_Y, input_ixs=input_neuron_ixs)
 
-#plt.plot(taus, scores)
-#plt.show()
+plt.plot(taus, scores)
+plt.show()
 
 
 # plot:
