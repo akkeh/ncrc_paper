@@ -12,7 +12,9 @@ To get started, look at the examples directory.
 Requirements:
     - numpy
     - nc_sim (git@github.com:akkeh/nc_sim.git)
+    - keras
     - scipy
+    - sklearn
 
 ==========================
 When using this code, please cite:
