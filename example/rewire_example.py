@@ -1,7 +1,7 @@
 '''
     ncrc: neuronal culture reservoir computing
         This work is accompanied by a scientific publication.
-        Please cite: A.M. Houben, A.-C. Haeb, J. Garcia-Ojalvo \& J. Soriano, Reservoir computing in simulated neuronal cultures: Effect of network structure, (in press)
+        Please cite: A.M. Houben, A.-C. Haeb, J. Garcia-Ojalvo & J. Soriano, Reservoir computing in simulated neuronal cultures: Effect of network structure, (in press)
     Copyright (C) 2025 Akke Mats Houben (akke@akkehouben.net)
 
     This program is free software: you can redistribute it and/or modify
@@ -28,6 +28,10 @@ Dt = 1
 IS_MODULAR = True
 
 P_rewire = 0.2
+
+# readout
+readout_Dt  = 1e-3
+N_cross     = 1
 
 # culture parameters:
 width   = 1.00  # width / height
@@ -141,7 +145,7 @@ input_t = np.array(input_t)
 input_y = np.array(input_y, dtype=int)
 
 classes = np.unique(input_y)
-taus = np.arange(int(-100e-3/Dt), int(300e-3/Dt), 1)*Dt
+taus = np.arange(int(-100e-3/readout_Dt), int(300e-3/readout_Dt), 1)*readout_Dt
 
 T = np.array(spikes_T)
 Y = np.array(spikes_Y, dtype=int)
@@ -149,7 +153,7 @@ for y in input_neuron_ixs:
     T = np.delete(T, Y==y)
     Y = np.delete(Y, Y==y)
 Tn = np.max(input_t)+taus[-1]+winT
-X = ncrc.rc.analyse.spikes_to_traces(T, Y, win_sigma=5e-3, Dt=1e-3)
+X = ncrc.rc.analyse.spikes_to_traces(T, Y, Tn, win_sigma=5e-3, Dt=readout_Dt)
 
 T_perm = np.array(spikes_T_perm)
 Y_perm = np.array(spikes_Y_perm, dtype=int)
@@ -157,16 +161,16 @@ for y in input_neuron_ixs:
     T_perm = np.delete(T_perm, Y_perm==y)
     Y_perm = np.delete(Y_perm, Y_perm==y)
 Tn = np.max(input_t)+taus[-1]+winT
-X_perm = ncrc.rc.analyse.spikes_to_traces(T_perm, Y_perm, win_sigma=5e-3, Dt=1e-3)
+X_perm = ncrc.rc.analyse.spikes_to_traces(T_perm, Y_perm, Tn, win_sigma=5e-3, Dt=readout_Dt)
 
 scores = np.zeros((len(taus), N_cross))
 for tau_ix, tau in enumerate(taus):
     for cross_ix in range(N_cross):
-        input_t_train, input_y_train, _, _ = ncrc.rc.analyse.split_train_test(input_t, unput_y, 1)
-        _, _, input_t_test, input_y_test = ncrc.rc.analyse.split_train_test(input_t, unput_y, 0)
+        input_t_train, input_y_train, _, _ = ncrc.rc.analyse.split_train_test(input_t, input_y, 1)
+        _, _, input_t_test, input_y_test = ncrc.rc.analyse.split_train_test(input_t, input_y, 0)
         
-        train_reservoir_states, train_labels = ncrc.rc.analyse.collect_states(input_t_train, input_y_train, tau, X, winT=winT, Dt=Dt)
-        test_reservoir_states, test_labels = ncrc.rc.analyse.collect_states(input_t_test, input_y_test, tau, X_perm, winT=winT, Dt=Dt)
+        train_reservoir_states, train_labels = ncrc.rc.analyse.collect_states(input_t_train, input_y_train, tau, X, winT=winT, Dt=readout_Dt)
+        test_reservoir_states, test_labels = ncrc.rc.analyse.collect_states(input_t_test, input_y_test, tau, X_perm, winT=winT, Dt=readout_Dt)
 
         lm = ncrc.rc.analyse.fit_lm(train_reservoir_states, train_labels)
 

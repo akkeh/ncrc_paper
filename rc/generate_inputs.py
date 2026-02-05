@@ -1,7 +1,7 @@
 '''
     ncrc: neuronal culture reservoir computing
         This work is accompanied by a scientific publication.
-        Please cite: A.M. Houben, A.-C. Haeb, J. Garcia-Ojalvo \& J. Soriano, Reservoir computing in simulated neuronal cultures: Effect of network structure, (in press)
+        Please cite: A.M. Houben, A.-C. Haeb, J. Garcia-Ojalvo & J. Soriano, Reservoir computing in simulated neuronal cultures: Effect of network structure, (in press)
     Copyright (C) 2025 Akke Mats Houben (akke@akkehouben.net)
 
     This program is free software: you can redistribute it and/or modify
