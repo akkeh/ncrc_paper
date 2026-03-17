@@ -16,6 +16,10 @@ Requirements:
     - scipy
     - sklearn
 
+N.B.: to pull nc_sim, in the root of this repository run:
+    $ git sumbodule update --init
+alternatively, when not using git, replace the directory nc_sim with the contents of the nc_sim git repository (https://github.com/akkeh/nc_sim.git).
+
 ==========================
 When using this code, please cite:
     A.M. Houben, A.-C. Haeb, J. Garcia-Ojalvo \& J. Soriano, Reservoir computing in simulated neuronal cultures: Effect of network structure, (in press)
